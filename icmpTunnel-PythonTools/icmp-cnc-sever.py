@@ -39,7 +39,7 @@ def sniffer(): sniff(iface=args.interface, prn=shell, filter="icmp", store="0")
 def shell(pkt):
     if pkt[IP].src == args.destination_ip and pkt[ICMP].type == 0 and pkt[ICMP].id == ICMP_ID and pkt[Raw].load:
         impacket_raw = dec((pkt[Raw].load), 0x13)
-        icmppacket = impacket_raw.decode('utf-8', errors='ignore').replace('\n','')
+        icmppacket = impacket_raw.decode('utf-8', errors='ignore')
         print(icmppacket)
     else:
         pass
